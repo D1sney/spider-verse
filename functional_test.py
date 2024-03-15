@@ -1,12 +1,3 @@
-# Без юнит тестов
-
-# from selenium import webdriver
-# # test that main page opens
-# browser = webdriver.Chrome()
-# browser.get('http://127.0.0.1:8000')
-# assert 'Spider-verse' in browser.title
-
-# На юнит тестах
 import unittest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -36,6 +27,22 @@ class NewVisitorTest(unittest.TestCase):
         self.browser.get('http://127.0.0.1:8000')
         header = self.browser.find_element(By.TAG_NAME, 'h1').text
         self.assertIn('Miles Morales', header)
+
+    # под заголовком страницы должен быть новостной блок из статей
+    def test_home_page_news(self):
+        self.browser.get('http://127.0.0.1:8000')
+        article_list = self.browser.find_element(By.CLASS_NAME, 'article-list')
+        self.assertTrue(article_list)
+        
+    # у каждой статьи должен быть заголовок и абзац с текстом
+    def test_home_page_articles_look_correct(self):
+        self.browser.get('http://127.0.0.1:8000')
+        article_title = self.browser.find_element(By.CLASS_NAME, 'article-title')
+        article_summary = self.browser.find_element(By.CLASS_NAME, 'article-summary')
+        self.assertTrue(article_title)
+        self.assertTrue(article_summary)
+
+    
 
 
 if __name__ == '__main__':
