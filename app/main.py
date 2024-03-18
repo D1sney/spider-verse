@@ -1,78 +1,55 @@
 from fastapi import FastAPI, Request, Depends, HTTPException, status, Response
-from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import datetime
 from sqlalchemy.orm import Session
-from . import models
+from sqladmin import Admin
+from . import models, schemas
 from .database import engine, get_db
+from admin import views
 
 models.Base.metadata.create_all(bind=engine)
-
-
-# модели pydantic
-class User(BaseModel):
-    id: int
-    username: str
-    hero: str
-    email: str
-    password: str
-
-class Article(BaseModel):
-    id: int
-    title: str
-    full_text: str
-    summary: str
-    category: str | None = None
-    pubdate: datetime.datetime | None = None
-    is_published: bool = True
-    # "id": "int",
-    # "title": "str",
-    # "full_text": "str",
-    # "summary": "str",
-    # "category": "str | None = None",
-    # "pubdate": "datetime.datetime",
-    # "is_published": "bool = True"
 
 
 app = FastAPI(
     title = 'Spider-verse'
 )
-templates = Jinja2Templates(directory="templates")
 
+# важно назвать не templates и не statics, чтобы не было конфликтов имен с sqladmin
+template = Jinja2Templates(directory="template")
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+
+# Админка
+admin = Admin(app, engine)
+admin.add_view(views.UserAdmin)
+admin.add_view(views.ArticleAdmin)
+
 
 @app.get('/')
 async def get_main_page(request: Request, db: Session = Depends(get_db)):
-    # articles имеет очень много методов по которым к нему можно обращаться
-    # articles = db.query(models.Article)
-    # print(dir(db))
-    return templates.TemplateResponse("index.html", {"request": request})
+    return template.TemplateResponse("index.html", {"request": request})
 
 
-@app.get('/articles')
+@app.get('/articles', response_model=list[schemas.ArticleResponse]) # list с маленькой буквы потому что после Python 3.9 так можно делать, а в ранних версиях необходимо было импортировать List из typing
 async def get_articles(db: Session = Depends(get_db)):
     articles = db.query(models.Article).all() # тут объект сессии обращается к нашим моделям и с помощью all вытягивает все значения, но после обращения к моделям можно также и менять данные в бд, а не только вытащить
-    return {'articles': articles}
+    return articles
 
-
-@app.post('/articles')
-async def create_article(article: Article, db: Session = Depends(get_db)):
-    # сначала проходится фильтрация по pydantic моделе, потом ВЫБРАННЫЕ поля сохраняются в переменную
-    # эти поля сохраняются в бд и там дополнительно могут присвоиться значения по умолчанию определенным полян
-    # далее с помощью refresh возвращает немного возможно измененый этим путем объект, такой каким он сохранился в бд
+# response_model позволяет вернуть ответ пользователю в соответствии с нашей pydsntic моделью
+@app.post('/articles', status_code=status.HTTP_201_CREATED, response_model=schemas.ArticleResponse)
+async def create_article(article: schemas.ArticleCreate, db: Session = Depends(get_db)):
     new_article = models.Article(**article.dict()) # вариант если очень много полей и вариант ниже становится затруднительным
     # new_article = models.Article(title=article.title, full_text=article.full_text, summary=article.summary)
     db.add(new_article)
     db.commit()
     db.refresh(new_article)
-    return {'message': new_article}
+    return new_article
 
 
-@app.get('/articles/{id}', status_code=200)
+@app.get('/articles/{id}', status_code=200, response_model=schemas.ArticleResponse)
 async def get_one_article(id: int, db: Session = Depends(get_db)):
     article = db.query(models.Article).filter(models.Article.id == id).first()
-    return {'article': article}
+    return article
 
 
 # при status_code 204 нельзя вернуть json
@@ -88,17 +65,16 @@ async def delete_article(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put('/articles/{id}')
-async def update_post(id: int, updated_article: Article, db: Session = Depends(get_db)):
+@app.put('/articles/{id}', response_model=schemas.ArticleResponse)
+async def update_post(id: int, updated_article: schemas.ArticleUpdate, db: Session = Depends(get_db)):
     article = db.query(models.Article).filter(models.Article.id == id)
 
     if article.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} does not exist")
-    # в таком случает в pydantic существует pubdate, но мы его предварительно удаляем и обновляем бд уже без pubdate
-    # но более локаничным решением я считаю просто не добавлять pubdate в pydantic модель, если все равно бд всегда генерирует время
+
     up = updated_article.dict()
     up.pop('pubdate')
     article.update(up, synchronize_session=False)
     db.commit()
-    return {'article': article.first()}
+    return article.first()
