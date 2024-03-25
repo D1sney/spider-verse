@@ -37,3 +37,18 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type:str
+
+# называется data а не response потому что отвечает за модель ответа в функции а не в эндпоинте
+# cхема включает в себя то что мы передаем в токен
+class TokenPayload(BaseModel):
+    username: str | None = None

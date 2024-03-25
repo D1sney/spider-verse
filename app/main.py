@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from sqladmin import Admin
 from . import models, schemas, utils
 from .database import engine, get_db
-from admin import views
-from .routers import article, user
+from admin import views, auth as admin_auth
+from .routers import article, user, auth
 
 
 # orm
@@ -22,7 +22,7 @@ app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 
 # Админка
-admin = Admin(app, engine)
+admin = Admin(app, engine, authentication_backend=admin_auth.authentication_backend)
 admin.add_view(views.UserAdmin)
 admin.add_view(views.ArticleAdmin)
 
@@ -30,6 +30,7 @@ admin.add_view(views.ArticleAdmin)
 # Подключение роутеров
 app.include_router(article.router)
 app.include_router(user.router)
+app.include_router(auth.router)
 
 
 @app.get('/')
