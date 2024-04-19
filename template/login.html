@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spider-verse</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles/login-page.css') }}">
+
+    <script>
+        function authenticateAndRedirect() {
+            const email = document.getElementById("email_form").value;
+            const password = document.getElementById("password_form").value;
+
+            // Формируем данные для отправки на сервер
+            const formData = new FormData();
+            formData.append("username", email);
+            formData.append("password", password);
+
+            // Опции запроса
+            const requestOptions = {
+                method: 'POST',
+                body: formData,
+                redirect: 'follow'
+            };
+
+            // Отправляем запрос на сервер для аутентификации
+            fetch('/login', requestOptions)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка запроса');
+                    } else {
+                        return response.json(); // Получаем ответ в формате JSON
+                    }
+                })
+                .then(data => {
+                    // Сохраняем полученный JWT токен в локальное хранилище
+                    console.log('Данные из ответа сервера:', data);
+                    localStorage.setItem('jwt_token', data.access_token);
+
+                    // Перенаправляем на защищенный эндпоинт
+                    window.location.href = '/pages/home';
+
+                })
+                .catch(error => {
+                    // Обработка ошибки
+                    console.error('Ошибка:', error);
+                    // Выводим сообщение об ошибке с помощью alert
+                    alert('Произошла ошибка при выполнении запроса');
+                });
+        }
+    </script>
+
+</head>
+
+<body>
+    <div class="my-body">
+        <!-- тэг form накладывает особенности на другие тэги внутри него, напремер на кнопки, поэтому для гибкости лучше использовать div -->
+        <div class="my-login-form">
+            <div class="row">
+                <div class="my-login-input">
+                    <input id="email_form" type="text" class="form-control" placeholder="Email" aria-label="Email">
+                </div>
+                <div class="my-login-input">
+                    <input id="password_form" type="text" class="form-control" placeholder="Password"
+                        aria-label="Password">
+                </div>
+            </div>
+            <div class="my-login-input">
+                <button onclick="authenticateAndRedirect()" type="submit" class="btn btn-dark">Sign in</button>
+            </div>
+        </div>
+    </div>
+    <!-- <button onclick="searchForOperation()">Sign in</button> -->
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

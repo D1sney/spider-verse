@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script>
+    const searchForOperation = () => {
+        const searchInputValue = document.getElementById("operation_search").value;
+        // alert(searchInputValue);
+        window.location.href = "/pages/" + searchInputValue;
+    }
+
+    // Получение токена из localStorage
+    const token = localStorage.getItem('jwt_token');
+
+    // Отправка запроса на защищенный эндпоинт с использованием токена в заголовке Authorization
+    fetch('/articles', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+        .then(response => {
+            if (response.ok) {
+                // Обработка успешного ответа от сервера
+                response.json().then(data => {
+                    // Вывод контента или что-то еще сделать с данными
+                    console.log(data);
+                    const cardsContainer = document.getElementById('cards_from_server');
+
+                    // Добавляем владельца
+                    cardsContainer.innerHTML += '<h1>' + data[0].owner.username + '</h1>';
+                    // Цикл для создания каждой карточки поста
+                    data.forEach(article => {
+                        const cardHTML = `
+                            <div class="card h-100 bg-danger" style="width: 18rem;">
+                                <img src="/static/images/red-splash.png" class="card-img-top" alt="...">
+                                <div class="card-body">
+                                    <h5 class="card-title">${article.title}</h5>
+                                    <p class="card-text">${article.summary}</p>
+                                    <a href="#" class="btn btn-primary">Go somewhere</a>
+                                </div>
+                                <div class="card-footer">
+                                    <small class="text-muted">Last updated 3 mins ago</small>
+                                </div>
+                            </div>
+                        `;
+                        cardsContainer.innerHTML += cardHTML;
+                    });
+
+                    // cards.innerHTML = 'my cards'
+                });
+            } else if (response.status === 401) {
+                // Если получен статус 401 Unauthorized, перенаправляем пользователя на страницу логина
+
+                window.location.href = '/';
+                alert('неправильный пароль или логин')
+            } else {
+                // Обработка других ошибок
+                console.error('Произошла ошибка при выполнении запроса2:', response.status);
+            }
+        })
+        .catch(error => {
+            console.error('Произошла ошибка при выполнении запроса:', error);
+        });
+
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex mt-3" role="search">
+    <input id="operation_search" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+    <button onclick="searchForOperation()" class="btn btn-success" type="submit">Search</button>
+</div>
+
+<div id="cards_from_server" class="cards_me">
+
+</div>
+<!-- {% for operation in operations %}
+
+<div class="card" style="width: 18rem;">
+    <img src="{{ url_for('static', path='/images/red-splash.png') }}" class="card-img-top" alt="...">
+    <div class="card-body">
+        <h5 class="card-title">{{ operation.title }}</h5>
+        <p class="card-text">{{ operation.summary }}</p>
+        <a href="#" class="btn btn-primary">Go somewhere</a>
+    </div>
+</div>
+
+{% endfor %} -->
+
+{% endblock %}

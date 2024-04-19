@@ -1,26 +1,6 @@
 from pydantic import BaseModel, EmailStr
 import datetime
 
-# модели pydantic
-class ArticleBase(BaseModel):
-    title: str
-    full_text: str
-    summary: str
-    category: str | None = None
-    is_published: bool = True
-
-class ArticleCreate(ArticleBase):
-    pass
-
-class ArticleUpdate(ArticleBase):
-    pass
-
-class ArticleResponse(ArticleBase):
-    id: int
-    pubdate: datetime.datetime | None = None
-
-    class Config:
-        from_attributes = True
 
 
 class UserCreate(BaseModel):
@@ -42,6 +22,31 @@ class UserResponse(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+# модели pydantic
+class ArticleBase(BaseModel):
+    title: str
+    full_text: str
+    summary: str
+    category: str | None = None
+    is_published: bool = True
+
+class ArticleCreate(ArticleBase):
+    pass
+
+class ArticleUpdate(ArticleBase):
+    pass
+
+class ArticleResponse(ArticleBase):
+    id: int
+    pubdate: datetime.datetime | None = None
+    owner_id: int
+    owner: UserResponse # благодаря relationship, sqlalchemy сама отлавливает пользователя, а с помощью pydantic модели мы можем ссылаться на другую модель и получится вложенный json в ответе
+
+    class Config:
+        from_attributes = True
+
 
 
 class Token(BaseModel):

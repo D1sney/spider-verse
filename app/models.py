@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, text
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, text, ForeignKey
+from sqlalchemy.orm import relationship
 from .database import Base
 
 # модели sqlalchemy
@@ -22,3 +23,7 @@ class Article(Base):
     category = Column(String, default=None)
     pubdate = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     is_published = Column(Boolean, server_default='TRUE', nullable=False)
+    # CASCADE означает что при удалении юзера, все посты ссылающиеся на его id тоже будут удалены
+    owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+
+    owner = relationship('User') # это обращение не к названию таблицы а к названию класса модели!!!

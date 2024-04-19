@@ -1,0 +1,25 @@
+body {
+    background-color: #0f0f0f;
+}
+
+.my-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.my-login-form {
+    margin-top: 10%;
+    text-align: center;
+    height: 18rem;
+    width: 18rem;
+    background: linear-gradient(120deg, #00b46c 10%, #3200c9 100%);
+    border-radius: 5%;
+    box-shadow: 0px 0px 200px 10px #ff129c;
+  }
+
+.my-login-input {
+    padding: 1.6rem;
+    padding-left: 2.4rem;
+    padding-right: 2.4rem;
+}
