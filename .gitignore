@@ -1,5 +1,5 @@
 venv
 desktop.ini
 __pycache__
-database.py
 .pytest_cache
+.env

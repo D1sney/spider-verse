@@ -13,9 +13,9 @@ router = APIRouter(
 
 
 @router.get('/', response_model=list[schemas.ArticleResponse]) # list с маленькой буквы потому что после Python 3.9 так можно делать, а в ранних версиях необходимо было импортировать List из typing
-async def get_articles(db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)):
+async def get_articles(db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user), limit: int = 10, offset: int = 0, search: str | None = ''):
     # filter направлен на то чтобы пользователю показывались только принадлежащие ему посты, а не все
-    articles = db.query(models.Article).filter(models.Article.owner_id == current_user.id).all() # тут объект сессии обращается к нашим моделям и с помощью all вытягивает все значения, но после обращения к моделям можно также и менять данные в бд, а не только вытащить
+    articles = db.query(models.Article).filter(models.Article.owner_id == current_user.id).filter(models.Article.title.contains(search)).limit(limit).offset(offset) # тут объект сессии обращается к нашим моделям и с помощью all вытягивает все значения, но после обращения к моделям можно также и менять данные в бд, а не только вытащить
     return articles
 
 # response_model позволяет вернуть ответ пользователю в соответствии с нашей pydsntic моделью

@@ -7,6 +7,7 @@ from . import models, schemas, utils
 from .database import engine, get_db
 from admin import views, auth as admin_auth
 from .routers import article, user, auth, pages
+from .config import settings
 
 
 # orm
