@@ -1,8 +1,8 @@
 from fastapi import status, HTTPException, Depends, Response, APIRouter
 from sqlalchemy.orm import Session
-from .. import models, schemas
+from sqlalchemy import func
+from .. import models, schemas, oauth2
 from ..database import get_db
-from .. import oauth2
 
 
 router = APIRouter(
@@ -12,10 +12,13 @@ router = APIRouter(
 )
 
 
-@router.get('/', response_model=list[schemas.ArticleResponse]) # list с маленькой буквы потому что после Python 3.9 так можно делать, а в ранних версиях необходимо было импортировать List из typing
+@router.get('/', response_model=list[schemas.ArticleLikeResponse]) # list с маленькой буквы потому что после Python 3.9 так можно делать, а в ранних версиях необходимо было импортировать List из typing
 async def get_articles(db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user), limit: int = 10, offset: int = 0, search: str | None = ''):
     # filter направлен на то чтобы пользователю показывались только принадлежащие ему посты, а не все
-    articles = db.query(models.Article).filter(models.Article.owner_id == current_user.id).filter(models.Article.title.contains(search)).limit(limit).offset(offset) # тут объект сессии обращается к нашим моделям и с помощью all вытягивает все значения, но после обращения к моделям можно также и менять данные в бд, а не только вытащить
+    # articles = db.query(models.Article).filter(models.Article.owner_id == current_user.id).filter(models.Article.title.contains(search)).limit(limit).offset(offset).all() # тут объект сессии обращается к нашим моделям и с помощью all вытягивает все значения, но после обращения к моделям можно также и менять данные в бд, а не только вытащить
+    
+    # здесь мы создаем на языке sqlalchemy запрос с join и подсчитываем количество лайков через group_by и count, важно обработаь полученные значения в response_model, потому что FastApi не знает что с ними делать, а Pydantic знает
+    articles = db.query(models.Article, func.count(models.Like.article_id).label('likes')).join(models.Like, models.Article.id == models.Like.article_id, isouter=True).group_by(models.Article.id).filter(models.Article.owner_id == current_user.id).filter(models.Article.title.contains(search)).limit(limit).offset(offset).all()
     return articles
 
 # response_model позволяет вернуть ответ пользователю в соответствии с нашей pydsntic моделью
@@ -30,15 +33,15 @@ async def create_article(article: schemas.ArticleCreate, db: Session = Depends(g
     return new_article
 
 
-@router.get('/{id}', status_code=200, response_model=schemas.ArticleResponse)
+@router.get('/{id}', status_code=200, response_model=schemas.ArticleLikeResponse)
 async def get_one_article(id: int, db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)):
-    article = db.query(models.Article).filter(models.Article.id == id).first()
+    article = db.query(models.Article, func.count(models.Like.article_id).label('likes')).join(models.Like, models.Article.id == models.Like.article_id, isouter=True).group_by(models.Article.id).filter(models.Article.id == id).first()
 
     if not article:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} was not found")
     # проверка что пост который пользователь хочет удалить, принадлежит ему
-    if article.owner_id != current_user.id:
+    if article.Article.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"not authorized to perform requested action")
     return article

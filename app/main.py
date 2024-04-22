@@ -6,7 +6,7 @@ from sqladmin import Admin
 from . import models, schemas, utils
 from .database import engine, get_db
 from admin import views, auth as admin_auth
-from .routers import article, user, auth, pages
+from .routers import article, user, auth, pages, like
 from .config import settings
 
 
@@ -33,6 +33,7 @@ app.include_router(article.router)
 app.include_router(user.router)
 app.include_router(auth.router)
 app.include_router(pages.router)
+app.include_router(like.router)
 
 
 @app.get('/')

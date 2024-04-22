@@ -27,3 +27,10 @@ class Article(Base):
     owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
 
     owner = relationship('User') # это обращение не к названию таблицы а к названию класса модели!!!
+
+
+class Like(Base):
+    __tablename__ = "likes"
+    article_id = Column(Integer, ForeignKey('articles.id', ondelete='CASCADE'), primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True, nullable=False)
+    date = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
