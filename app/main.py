@@ -19,7 +19,8 @@ app = FastAPI(
     title = 'Spider-verse'
 )
 
-origins = ['https://www.google.com']
+# важно не добавлять слеш в конце url чтобы все работало корректно
+origins = [settings.BASE_URL, utils.add_www(settings.BASE_URL)]
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,5 +52,5 @@ app.include_router(like.router)
 
 @app.get('/')
 async def get_main_page(request: Request, db: Session = Depends(get_db)):
-    return template.TemplateResponse("login.html", {"request": request})
+    return template.TemplateResponse("login.html", {"request": request, "base_url": settings.BASE_URL})
 

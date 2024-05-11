@@ -12,7 +12,8 @@
     const token = localStorage.getItem('jwt_token');
 
     // Отправка запроса на защищенный эндпоинт с использованием токена в заголовке Authorization
-    fetch('/articles', {
+    // Нельзя игнорировать query params если он не опциональны в моделях на бэке
+    fetch('/articles/?limit=10&offset=0', {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`
@@ -27,15 +28,15 @@
                     const cardsContainer = document.getElementById('cards_from_server');
 
                     // Добавляем владельца
-                    cardsContainer.innerHTML += '<h1>' + data[0].owner.username + '</h1>';
+                    cardsContainer.innerHTML += '<h1>' + data[0].Article.owner.username + '</h1>';
                     // Цикл для создания каждой карточки поста
                     data.forEach(article => {
                         const cardHTML = `
                             <div class="card h-100 bg-danger" style="width: 18rem;">
                                 <img src="/static/images/red-splash.png" class="card-img-top" alt="...">
                                 <div class="card-body">
-                                    <h5 class="card-title">${article.title}</h5>
-                                    <p class="card-text">${article.summary}</p>
+                                    <h5 class="card-title">${article.Article.title}</h5>
+                                    <p class="card-text">${article.likes}</p>
                                     <a href="#" class="btn btn-primary">Go somewhere</a>
                                 </div>
                                 <div class="card-footer">
