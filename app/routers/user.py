@@ -12,7 +12,7 @@ router = APIRouter(
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
-async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)): # Depends(oauth2.oauth2_scheme) - такой параметр токен нужно передавать для эндопоинтов в которых необходима авторизация, он проверяет наличие токена, но не проверяет сам токен на валидность
+async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)): # Depends(oauth2.oauth2_scheme) - такой параметр токен нужно передавать для эндопоинтов в которых необходима авторизация, он проверяет наличие токена, но не проверяет сам токен на валидность
     
     # hash the password - user.password
     user.password = utils.hash(user.password)

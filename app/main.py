@@ -21,7 +21,7 @@ app = FastAPI(
 
 # важно не добавлять слеш в конце url чтобы все работало корректно
 origins = [settings.BASE_URL, utils.add_www(settings.BASE_URL)]
-
+origins = ['*']
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

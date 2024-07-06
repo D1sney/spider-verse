@@ -1,0 +1,36 @@
+version: "3"
+services:
+  api:
+    image: disney36/spider-verse
+    # для того чтобы бд запускалась раньше нашего приложения и не возникало ошибки о невозможности подключения
+    depends_on:
+      - postgres
+    ports:
+      - 80:8000
+    # синхронизация изменений в нашей директории и директории в контейнере, ro означает что контейнер может повторять наши изменения, но только мы можем делать изменения, контейнер не может
+    # command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    # env_file:
+    #     - .env
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=${ALGORITHM}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - BASE_URL=${BASE_URL}
+  
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    # эта штука записывает данные бд чтобы их не потерять
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+
+# это делается чтобы к этим данным могли обращаться другие контейнеры
+volumes:
+    postgres-db:
