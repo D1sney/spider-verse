@@ -13,7 +13,8 @@ from .config import settings
 
 # orm
 # теперь когда у нас в проекте есть alembic у нас нет необходимости в этой строчке которая создает таблицы по sqlalchemy моделям, если таблиц с такими названиями не существует
-models.Base.metadata.create_all(bind=engine)
+# при запуске CI в github actions эта строчка будет вызывать ошибку, так как через workflow файл мы будем создавать только бд для тестирования, а так как обычной бд не будет, будет ошибка, потому что в этой строчке engine обращается к обычной бд
+# models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title = 'Spider-verse'
